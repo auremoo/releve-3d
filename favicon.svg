@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Logo provisoire (cube isométrique + cote). À remplacer par le logo définitif, puis relancer scripts/build_images.js. -->
+  <style>.i{stroke:#0F1E36}.m{stroke:#F26B1D}@media (prefers-color-scheme:dark){.i{stroke:#E4EAF5}.m{stroke:#FF8A3D}}</style>
+  <g fill="none" stroke-linejoin="round" stroke-linecap="round">
+    <path class="i" d="M16 3 27 9.5v13L16 29 5 22.5v-13Z M5 9.5 16 16l11-6.5M16 16v13" stroke-width="2"/>
+    <path class="m" d="M1.5 9.5v13M.5 9.5h2M.5 22.5h2" stroke-width="1.6"/>
+  </g>
+</svg>

@@ -3,8 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Vision 3D</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cg fill='none' stroke-linejoin='round' stroke-linecap='round'%3E%3Cpath d='M16 3 27 9.5v13L16 29 5 22.5v-13Z M5 9.5 16 16l11-6.5M16 16v13' stroke='%230F1E36' stroke-width='2'/%3E%3Cpath d='M1.5 9.5v13M.5 9.5h2M.5 22.5h2' stroke='%23F26B1D' stroke-width='1.6'/%3E%3C/g%3E%3C/svg%3E">
+<title>Relevé 3D</title>
+<meta name="description" content="Des photos d’un logement ou d’un objet à la maquette 3D cotée, exportable en GLB.">
+<meta name="theme-color" content="#0F1E36">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="Relevé 3D">
+<meta property="og:title" content="Relevé 3D">
+<meta property="og:description" content="Des photos d’un logement ou d’un objet à la maquette 3D cotée, exportable en GLB.">
+<meta property="og:url" content="https://auremoo.github.io/releve-3d/">
+<meta property="og:image" content="https://auremoo.github.io/releve-3d/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Relevé 3D : de la photo à la maquette 3D">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -208,7 +222,7 @@ details.manual[open] summary{margin-bottom:10px}
   <header class="bar">
     <div class="brand">
       <svg viewBox="0 0 32 32" aria-hidden="true"><g fill="none" stroke-linejoin="round" stroke-linecap="round"><path d="M16 3 27 9.5v13L16 29 5 22.5v-13Z M5 9.5 16 16l11-6.5M16 16v13" style="stroke:var(--ink)" stroke-width="2"/><path d="M1.5 9.5v13M.5 9.5h2M.5 22.5h2" style="stroke:var(--measure)" stroke-width="1.6"/></g></svg>
-      <span>Vision 3D</span>
+      <span>Relevé 3D</span>
     </div>
     <div class="proj">
       <select id="projSel" aria-label="Projet ouvert"></select>
@@ -849,7 +863,7 @@ const LocalStore = {
   kind:"local", idb:null,
   async init(){
     this.idb = await withTimeout(new Promise((res, rej) => {
-      const r = indexedDB.open("vision3d", 1);
+      const r = indexedDB.open("vision3d", 1);  // nom d’avant le renommage, conservé pour garder les projets locaux
       r.onupgradeneeded = () => { r.result.createObjectStore("projects", {keyPath:"id"}); r.result.createObjectStore("photos"); };
       r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
     }), 5000);
@@ -1480,15 +1494,15 @@ $("bExport").onclick = async () => {
   try {
     const photos = {};
     for (const z of P.zones) for (const id of z.photos) { try { photos[id] = await blobToData(await store.getPhoto(id)); } catch(_) {} }
-    const data = {app:"vision-3d", format:1, project:P, photos};
-    await saveFile(safeName(P.name) + ".vision3d.json", new Blob([JSON.stringify(data)], {type:"application/json"}));
+    const data = {app:"releve-3d", format:1, project:P, photos};
+    await saveFile(safeName(P.name) + ".releve3d.json", new Blob([JSON.stringify(data)], {type:"application/json"}));
   } catch(e){ console.error(e); toast("Sauvegarde impossible."); }
 };
 $("fImport").onchange = async e => {
   const f = e.target.files[0]; e.target.value = ""; if (!f) return;
   try {
     const data = JSON.parse(await f.text());
-    if (data.app !== "vision-3d" || !data.project) throw new Error("Ce fichier n’est pas un projet Vision 3D.");
+    if (!["releve-3d", "vision-3d"].includes(data.app) || !data.project) throw new Error("Ce fichier n’est pas un projet Relevé 3D.");  // "vision-3d" : fichiers .vision3d.json d’avant le renommage
     const p = data.project; const map = {};
     for (const [old, url] of Object.entries(data.photos || {})) { try { map[old] = await store.putPhoto(dataToBlob(url)); } catch(_) {} }
     p.id = uid(); p.name = (p.name || "Projet importé");

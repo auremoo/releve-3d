@@ -1,4 +1,6 @@
-# Vision 3D
+# Relevé 3D
+
+Anciennement *Vision 3D*.
 
 Application web (un seul fichier, `index.html`) qui transforme des photos d'un logement ou d'un objet en maquette 3D exportable en GLB.
 
@@ -10,14 +12,14 @@ Application web (un seul fichier, `index.html`) qui transforme des photos d'un l
    - **Ailleurs** : « Copier le prompt » + « Télécharger les photos (.zip) », à coller dans n'importe quelle IA qui accepte des images, puis on colle sa réponse dans l'appli.
 3. **Mise à jour** : une zone ajoutée ou modifiée est marquée « À intégrer ». La génération suivante envoie seulement ces zones et le modèle existant. L'IA renvoie un correctif (`upsert` / `remove`) fusionné par identifiant. Une « demande de modification » en texte libre fonctionne aussi sans photo.
 4. **Vues** : maquette, plan (murs coupés à 1,10 m) et visite à hauteur d'yeux, où l'on touche le sol pour avancer. Cotes, surfaces des pièces, historique des versions, édition directe du JSON.
-5. **Export** : GLB (murs entiers, sans plafonds) et sauvegarde complète du projet en `.vision3d.json`, photos comprises.
+5. **Export** : GLB (murs entiers, sans plafonds) et sauvegarde complète du projet en `.releve3d.json`, photos comprises. Les anciennes sauvegardes `.vision3d.json` s'importent toujours.
 
 ## Stockage
 
 | Contexte | Où vont les projets |
 |---|---|
 | Artifact claude.ai | Base de données de l'artifact, dans l'espace privé de l'utilisateur (`data/users/<id>`). Les photos sont stockées comme assets de l'artifact. |
-| Page ouverte dans un navigateur | IndexedDB du navigateur |
+| Page ouverte dans un navigateur | IndexedDB du navigateur (base `vision3d`, nom conservé pour ne pas perdre les projets déjà enregistrés) |
 | Stockage indisponible | Mémoire seulement : penser à « Sauvegarder le projet » |
 
 ## Format du modèle
@@ -32,7 +34,15 @@ Le schéma complet envoyé à l'IA se trouve dans la constante `SCHEMA` de `inde
 ## Utilisation
 
 - En local : ouvrir `index.html` dans un navigateur (three.js est chargé depuis jsDelivr).
-- Comme artifact Claude : `python3 scripts/build_artifact.py` produit `dist/vision-3d.html`, à publier avec les capacités `db`, `user`, `assets`, `downloads` et `sample` (images).
+- Sur GitHub Pages : Settings → Pages → *Deploy from a branch*, branche `main`, dossier `/ (root)`. Adresse prévue : <https://auremoo.github.io/releve-3d/>. Le fichier `.nojekyll` évite le passage par Jekyll.
+- Comme artifact Claude : `python3 scripts/build_artifact.py` produit `dist/releve-3d.html` (sans l'enveloppe HTML ni les balises propres à GitHub Pages), à publier avec les capacités `db`, `user`, `assets`, `downloads` et `sample` (images).
+
+## Icônes et aperçu de partage
+
+- `favicon.svg` : icône d'onglet (s'adapte au thème sombre). Le cube isométrique est provisoire.
+- `apple-touch-icon.png` (180×180, fond opaque) et `og-image.png` (1200×630, aperçu Open Graph) sont générés depuis `favicon.svg` par `node scripts/build_images.js` (Playwright + Chromium). À relancer après tout changement de logo.
+- Les balises `og:url` et `og:image` de `index.html` contiennent l'adresse absolue de la page : à modifier si le site change d'adresse (domaine personnalisé, dépôt renommé).
+- Le logo de la barre d'app est un SVG en ligne dans `index.html` (couleurs liées aux thèmes) : à remplacer à la main en même temps que `favicon.svg`.
 
 ## Limites connues
 
