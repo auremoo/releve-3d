@@ -35,7 +35,7 @@ Le schéma complet envoyé à l'IA se trouve dans la constante `SCHEMA` de `inde
 
 - En local : ouvrir `index.html` dans un navigateur (three.js est chargé depuis jsDelivr).
 - Sur GitHub Pages : Settings → Pages → *Deploy from a branch*, branche `main`, dossier `/ (root)`. Adresse prévue : <https://auremoo.github.io/releve-3d/>. Le fichier `.nojekyll` évite le passage par Jekyll.
-- Comme artifact Claude : `python3 scripts/build_artifact.py` produit `dist/releve-3d.html` (sans l'enveloppe HTML ni les balises propres à GitHub Pages), à publier avec les capacités `db`, `user`, `assets`, `downloads` et `sample` (images).
+- Comme artifact Claude : `python3 scripts/build_artifact.py` produit `dist/releve-3d.html` (sans l'enveloppe HTML ni les balises propres à GitHub Pages ; `favicon.svg` y est intégré en data URI), à publier avec les capacités `db`, `user`, `assets`, `downloads` et `sample` (images).
 
 ## Icônes et aperçu de partage
 
