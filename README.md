@@ -37,12 +37,13 @@ Le schéma complet envoyé à l'IA se trouve dans la constante `SCHEMA` de `inde
 - Sur GitHub Pages : Settings → Pages → *Deploy from a branch*, branche `main`, dossier `/ (root)`. Adresse prévue : <https://auremoo.github.io/releve-3d/>. Le fichier `.nojekyll` évite le passage par Jekyll.
 - Comme artifact Claude : `python3 scripts/build_artifact.py` produit `dist/releve-3d.html` (sans l'enveloppe HTML ni les balises propres à GitHub Pages ; `favicon.svg` y est intégré en data URI), à publier avec les capacités `db`, `user`, `assets`, `downloads` et `sample` (images).
 
-## Icônes et aperçu de partage
+## Logo, icônes et aperçu de partage
 
-- `favicon.svg` : icône d'onglet (s'adapte au thème sombre). Le cube isométrique est provisoire.
-- `apple-touch-icon.png` (180×180, fond opaque) et `og-image.png` (1200×630, aperçu Open Graph) sont générés depuis `favicon.svg` par `node scripts/build_images.js` (Playwright + Chromium). À relancer après tout changement de logo.
+- `logo.svg` : logo de référence (cadre 1024, fond transparent, bleu de Prusse `#0F1E36` et orange `#F26B1D`).
+- `favicon.svg` : recadrage du logo pour l'onglet. Il passe en couleurs claires quand le navigateur est en thème sombre.
+- Le logo de la barre d'app est le même recadrage, en SVG dans `index.html`, avec les couleurs liées au thème (`--ink`, `--measure`).
+- `apple-touch-icon.png` (180×180, fond blanc, à partir de `logo.svg`) et `og-image.png` (1200×630, aperçu Open Graph) sont générés par `node scripts/build_images.js` (Playwright + Chromium). À relancer après tout changement de logo.
 - Les balises `og:url` et `og:image` de `index.html` contiennent l'adresse absolue de la page : à modifier si le site change d'adresse (domaine personnalisé, dépôt renommé).
-- Le logo de la barre d'app est un SVG en ligne dans `index.html` (couleurs liées aux thèmes) : à remplacer à la main en même temps que `favicon.svg`.
 
 ## Limites connues
 

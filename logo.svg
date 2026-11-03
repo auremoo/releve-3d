@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Logo Relevé 3D, version maîtresse (cadre 1024, fond transparent). favicon.svg et le logo de la barre en sont des recadrages. -->
+  <path d="M480 160 757.13 320V640L480 800 202.87 640V320ZM202.87 320 480 480 757.13 320M480 480V800" fill="none" stroke="#0F1E36" stroke-width="28" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M525.52 853.51 802.67 693.5M513.52 832.73 537.52 874.29M790.67 672.72 814.67 714.28" fill="none" stroke="#F26B1D" stroke-width="18"/>
+</svg>

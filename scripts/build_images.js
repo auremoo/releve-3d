@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* Produit, à partir de favicon.svg, les images servies par GitHub Pages :
+/* Produit, à partir de logo.svg et favicon.svg, les images servies par GitHub Pages :
    - apple-touch-icon.png (180×180, fond opaque : iOS n'accepte pas de SVG ici et noircit la transparence) ;
    - og-image.png (1200×630, aperçu des liens partagés : les réseaux sociaux n'acceptent pas le SVG).
    Usage : node scripts/build_images.js   (nécessite Playwright et Chromium ; les polices viennent de Google Fonts). */
@@ -7,12 +7,13 @@ const path = require("path"), fs = require("fs");
 const { chromium } = require("playwright");
 
 const root = path.resolve(__dirname, "..");
-const logo = "data:image/svg+xml;base64," + fs.readFileSync(path.join(root, "favicon.svg")).toString("base64");
+const uri = f => "data:image/svg+xml;base64," + fs.readFileSync(path.join(root, f)).toString("base64");
+const logo = uri("favicon.svg"), full = uri("logo.svg"); // full : cadre complet, marges comprises (icône d'app)
 const fonts = '<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">';
 
 const touch = `<!doctype html><meta charset="utf-8"><style>
 html,body{margin:0;width:180px;height:180px;background:#FFFFFF}
-img{display:block;width:132px;height:132px;margin:24px}</style><img src="${logo}">`;
+img{display:block;width:180px;height:180px}</style><img src="${full}">`;
 
 const ticks = Array.from({length:121}, (_, i) => {
   const x = 10 * i, h = i % 10 === 0 ? 30 : i % 5 === 0 ? 20 : 11;
