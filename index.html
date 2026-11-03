@@ -4,257 +4,217 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Vision 3D</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cg fill='none' stroke-linejoin='round' stroke-linecap='round'%3E%3Cpath d='M16 3 27 9.5v13L16 29 5 22.5v-13Z M5 9.5 16 16l11-6.5M16 16v13' stroke='%230F1E36' stroke-width='2'/%3E%3Cpath d='M1.5 9.5v13M.5 9.5h2M.5 22.5h2' stroke='%23F26B1D' stroke-width='1.6'/%3E%3C/g%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/* Layout : volet de capture à gauche, scène 3D à droite ; sur téléphone la scène passe au-dessus. Identité « plan technique ». */
+/* Layout : barre d'app en haut, scène 3D au centre avec un « ruban de mesure » en pied, panneau d'étapes à onglets à droite (dessous sur téléphone).
+   Identité « relevé de chantier » : encre bleu de Prusse, orange de mètre ruban pour tout ce qui mesure. */
 :root{
-  --paper:#EEF1F3; --panel:#F8FAFB; --ink:#1B2730; --muted:#5B6A75; --line:#C9D1D7;
-  --accent:#00807F; --accent-ink:#FFFFFF; --stage-a:#E4E9EC; --stage-b:#CCD5DB; --danger:#A33A2E; --warn:#9A6A00;
-  --grid1:#9AA8B2; --grid2:#BCC6CD; --chip:#E1E7EA;
-  --f-display:"Barlow Semi Condensed","Barlow",system-ui,sans-serif;
-  --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --bg:#EEF2F8; --surface:#FFFFFF; --surface-2:#F4F7FB; --ink:#0F1E36; --muted:#56647D; --line:#D3DAE6;
+  --primary:#1E44A8; --primary-ink:#FFFFFF; --measure:#F26B1D; --measure-ink:#1F0E02;
+  --ok:#1C7C54; --warn:#B4600A; --danger:#B3261E;
+  --stage-a:#E7EDF6; --stage-b:#D0DAE8; --grid1:#9DADC6; --grid2:#C3CEDF;
+  --f-display:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-body:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   color-scheme: light; box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --paper:#141B20; --panel:#1A232A; --ink:#E3E9ED; --muted:#93A2AD; --line:#2B3740;
-    --accent:#3FBFBA; --accent-ink:#0C1A1A; --stage-a:#1B252C; --stage-b:#0E1418; --danger:#E07A6C; --warn:#E0B44E;
-    --grid1:#3E4E59; --grid2:#27333B; --chip:#24313A; color-scheme: dark;
+    --bg:#0B1424; --surface:#111D33; --surface-2:#0E182B; --ink:#E4EAF5; --muted:#8E9DB8; --line:#22314D;
+    --primary:#86A8FF; --primary-ink:#0B1424; --measure:#FF8A3D; --measure-ink:#1F0E02;
+    --ok:#5CC99A; --warn:#F0A54A; --danger:#FF8A80;
+    --stage-a:#14223B; --stage-b:#08101E; --grid1:#2F4366; --grid2:#1B2945; color-scheme: dark;
   }
 }
 :root[data-theme="dark"]{
-  --paper:#141B20; --panel:#1A232A; --ink:#E3E9ED; --muted:#93A2AD; --line:#2B3740;
-  --accent:#3FBFBA; --accent-ink:#0C1A1A; --stage-a:#1B252C; --stage-b:#0E1418; --danger:#E07A6C; --warn:#E0B44E;
-  --grid1:#3E4E59; --grid2:#27333B; --chip:#24313A; color-scheme: dark;
+  --bg:#0B1424; --surface:#111D33; --surface-2:#0E182B; --ink:#E4EAF5; --muted:#8E9DB8; --line:#22314D;
+  --primary:#86A8FF; --primary-ink:#0B1424; --measure:#FF8A3D; --measure-ink:#1F0E02;
+  --ok:#5CC99A; --warn:#F0A54A; --danger:#FF8A80;
+  --stage-a:#14223B; --stage-b:#08101E; --grid1:#2F4366; --grid2:#1B2945; color-scheme: dark;
 }
 *,*::before,*::after{box-sizing:inherit}
 html,body{height:100%;margin:0}
-body{background:var(--paper);color:var(--ink);font:15px/1.45 var(--f-body);-webkit-font-smoothing:antialiased}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 var(--f-body);-webkit-font-smoothing:antialiased}
 button,input,select,textarea{font:inherit;color:inherit}
-.app{display:grid;grid-template-columns:minmax(320px,380px) 1fr;grid-template-areas:"side stage";height:100%}
-aside{grid-area:side;background:var(--panel);border-right:1px solid var(--line);overflow:auto;min-height:0;display:flex;flex-direction:column}
-main{grid-area:stage;position:relative;min-width:0;min-height:0;background:radial-gradient(ellipse at 50% 35%,var(--stage-a),var(--stage-b));overflow:hidden}
-canvas{display:block;width:100%;height:100%;touch-action:none}
-.brand{padding:18px 18px 10px}
-.brand h1{font:600 22px/1.1 var(--f-display);margin:0;letter-spacing:.01em}
-.brand p{margin:3px 0 0;color:var(--muted);font-size:13.5px}
-.sec{padding:12px 18px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
-.sec h2{font:600 15px/1.2 var(--f-display);text-transform:uppercase;letter-spacing:.06em;margin:0;color:var(--muted);display:flex;justify-content:space-between;align-items:center;gap:8px}
-.sec h2 small{text-transform:none;letter-spacing:0;font:500 12.5px var(--f-body)}
-.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.row > .grow{flex:1;min-width:0}
-.act{font:500 13.5px var(--f-body);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:7px 11px;cursor:pointer;line-height:1.25}
-.act:hover:not(:disabled){border-color:var(--accent)}
+h2{font:700 17px/1.2 var(--f-display);font-stretch:112%;letter-spacing:-.005em;margin:0;text-wrap:balance}
+h3{font:600 12px/1.2 var(--f-mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0}
+.app{display:grid;height:100%;grid-template-columns:minmax(0,1fr) 400px;grid-template-rows:auto minmax(0,1fr);grid-template-areas:"bar bar" "stage panel"}
+
+/* Barre d'app */
+.bar{grid-area:bar;display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;background:var(--surface);border-bottom:1px solid var(--line);
+  padding-block:9px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.brand{display:flex;align-items:center;gap:9px;font:800 19px/1 var(--f-display);font-stretch:122%;letter-spacing:-.02em;white-space:nowrap}
+.brand svg{width:28px;height:28px;flex:none}
+.proj{display:flex;gap:6px;flex:1 1 260px;max-width:480px;min-width:0}
+.brand{min-width:0}
+.proj select{flex:1;min-width:0}
+.views{display:flex;gap:6px;margin-left:auto;align-items:center}
+
+/* Contrôles */
+.act{font:600 13.5px/1.2 var(--f-body);background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:8px 12px;cursor:pointer}
+.act:hover:not(:disabled){border-color:var(--ink)}
 .act:disabled{opacity:.45;cursor:default}
-.act.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.act.primary{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}
+.act.primary:hover:not(:disabled){filter:brightness(1.08);border-color:var(--primary)}
 .act.danger{color:var(--danger)}
-.act.small{padding:4px 8px;font-size:12.5px}
+.act.small{padding:5px 9px;font-size:12.5px}
 .act.wide{width:100%}
-button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible,label.act:focus-within{outline:2px solid var(--accent);outline-offset:2px}
-select,input[type="text"],textarea{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:7px 9px;min-width:0}
-textarea{width:100%;resize:vertical;min-height:62px}
-.hint{margin:0;color:var(--muted);font-size:13px}
-.hint b{color:var(--ink);font-weight:600}
+.act.dashed{border-style:dashed;background:none}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible,label.act:focus-within{outline:2px solid var(--measure);outline-offset:2px}
+select,input[type="text"],textarea{background:var(--surface-2);border:1px solid var(--line);border-radius:4px;padding:8px 10px;min-width:0}
+textarea{width:100%;resize:vertical;min-height:64px}
 label.act{display:inline-flex;align-items:center;gap:6px}
 label.act input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
-.seg button{border:0;background:none;padding:6px 10px;cursor:pointer;font-size:13.5px}
-.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.row > .grow{flex:1;min-width:0}
+.hint{margin:0;color:var(--muted);font-size:13.5px;max-width:62ch}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:4px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:none;padding:7px 12px;cursor:pointer;font:600 13.5px var(--f-body);color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.seg button:disabled{opacity:.4;cursor:default}
 .seg button+button{border-left:1px solid var(--line)}
-/* Zones de capture */
-.zones{display:flex;flex-direction:column;gap:10px}
-.zone{border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:8px;background:var(--panel)}
-.zone header{display:flex;gap:6px;align-items:center}
-.zone header input{flex:1;font-weight:600;background:none;border-color:transparent;padding:4px 6px}
-.zone header input:hover{border-color:var(--line)}
-.chip{font-size:12px;font-weight:600;padding:2px 7px;border-radius:99px;background:var(--chip);white-space:nowrap}
-.chip.todo{color:var(--warn)}
-.chip.ok{color:var(--accent)}
-.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:5px}
-.thumbs:empty{display:none}
-.thumb{position:relative;aspect-ratio:1;border-radius:5px;overflow:hidden;background:var(--chip);max-width:100%}
-.thumb img{width:100%;height:100%;object-fit:cover;display:block}
-.thumb button{position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;border:0;background:color-mix(in srgb,var(--ink) 70%,transparent);color:var(--paper);cursor:pointer;font-size:13px;line-height:20px;padding:0}
-.zone .x{background:none;border:0;color:var(--muted);font-size:20px;cursor:pointer;padding:0 4px;line-height:1}
-.zone .x:hover{color:var(--danger)}
-.zone input[type="text"],.zone textarea{font-size:13.5px}
-.zone textarea{min-height:46px}
-.log{font-size:13px;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:8px 10px;display:flex;flex-direction:column;gap:3px;font-variant-numeric:tabular-nums}
-.log:empty{display:none}
-.log .err{color:var(--danger)}
-.log .ok{color:var(--accent)}
-details.manual{border:1px solid var(--line);border-radius:8px;padding:8px 10px}
-details.manual summary{cursor:pointer;font-weight:600}
-details.manual[open] summary{margin-bottom:8px}
-details.manual .step{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
-details.manual .step > b{font-size:13.5px}
-.notes-ai{margin:0;padding-left:18px;font-size:13px;color:var(--muted)}
-.notes-ai:empty{display:none}
-.versions{display:flex;flex-direction:column;gap:4px;font-size:13px}
-.versions .v{display:flex;gap:8px;align-items:center;justify-content:space-between}
-.versions .v span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.store{padding:10px 18px 16px;color:var(--muted);font-size:12.5px;margin-top:auto;border-top:1px solid var(--line)}
-/* Scène */
-.tools{position:absolute;top:12px;right:12px;left:12px;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;pointer-events:none}
-.tools > *{pointer-events:auto}
-.glass{background:color-mix(in srgb,var(--panel) 88%,transparent);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
-.tools .act,.tools .seg{background:color-mix(in srgb,var(--panel) 88%,transparent);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .menu{position:relative}
 .menu summary{list-style:none}
 .menu summary::-webkit-details-marker{display:none}
-.menu .pop{position:absolute;right:0;top:calc(100% + 6px);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px;display:flex;flex-direction:column;min-width:190px;z-index:5}
-.menu .pop label{display:flex;gap:8px;align-items:center;padding:6px 8px;border-radius:5px;cursor:pointer;font-size:14px}
-.menu .pop label:hover{background:var(--chip)}
-.menu .pop input{accent-color:var(--accent);width:16px;height:16px;margin:0}
+.menu .pop{position:absolute;right:0;top:calc(100% + 6px);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px;display:flex;flex-direction:column;min-width:210px;z-index:15;box-shadow:0 10px 30px -12px color-mix(in srgb,var(--ink) 40%,transparent)}
+.menu .pop label{display:flex;gap:9px;align-items:center;padding:7px 8px;border-radius:4px;cursor:pointer;font-size:14px}
+.menu .pop label:hover{background:var(--surface-2)}
+.menu .pop input{accent-color:var(--primary);width:16px;height:16px;margin:0}
 .menu .pop label.off{opacity:.45;pointer-events:none}
 .menu .pop hr{border:0;border-top:1px solid var(--line);margin:4px 0}
-.menu .pop button{text-align:left;background:none;border:0;padding:6px 8px;border-radius:5px;cursor:pointer;font-size:14px}
-.menu .pop button:hover{background:var(--chip)}
+.menu .pop button{text-align:left;background:none;border:0;padding:7px 8px;border-radius:4px;cursor:pointer;font-size:14px}
+.menu .pop button:hover{background:var(--surface-2)}
+
+/* Scène */
+main{grid-area:stage;position:relative;min-width:0;min-height:0;overflow:hidden;background:radial-gradient(120% 90% at 40% 30%,var(--stage-a),var(--stage-b))}
+canvas{display:block;width:100%;height:100%;touch-action:none}
 #labels,#cotes{position:absolute;inset:0;pointer-events:none;overflow:hidden}
-.lbl3d{position:absolute;left:0;top:0;background:color-mix(in srgb,var(--panel) 90%,transparent);border:1px solid var(--line);color:var(--ink);font:500 12px/1.25 var(--f-body);padding:3px 7px;border-radius:4px;white-space:nowrap;will-change:transform;text-align:center;font-variant-numeric:tabular-nums}
-.lbl3d b{display:block;font-weight:600;font-size:12.5px}
-.cote{position:absolute;left:0;top:0;background:var(--accent);color:var(--accent-ink);font:600 12px/1.3 var(--f-body);font-variant-numeric:tabular-nums;padding:2px 6px;border-radius:4px;white-space:nowrap;will-change:transform}
-.cartouche{position:absolute;left:12px;bottom:12px;background:var(--panel);border:1.5px solid var(--ink);font-size:13px;width:min(440px,calc(100% - 24px))}
-.cartouche .t{padding:7px 12px;border-bottom:1.5px solid var(--ink);display:flex;justify-content:space-between;gap:10px;align-items:flex-start;cursor:pointer}
-.cartouche .t div{min-width:0}
-.cartouche .t b{display:block;font:600 17px/1.2 var(--f-display);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cartouche .t span{color:var(--muted)}
-.cartouche .t i{font-style:normal;color:var(--muted);font-size:12px;white-space:nowrap;padding-top:3px}
-.cartouche dl{display:grid;grid-template-columns:repeat(4,1fr);margin:0}
-.cartouche dl div{padding:5px 10px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-width:0}
-.cartouche dl div:nth-child(4n){border-right:0}
-.cartouche dt{color:var(--muted);font-size:11.5px}
-.cartouche dd{margin:0;font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.echelle{display:flex;align-items:flex-end;gap:10px;padding:6px 12px;flex-wrap:wrap}
-.echelle > span:first-child{color:var(--muted);font-size:11.5px;align-self:center}
-.echelle .bar{display:block;height:7px;border:1.5px solid var(--ink);border-top:0;width:90px;margin-bottom:3px}
-.echelle b{font-weight:600;font-variant-numeric:tabular-nums}
-.cartouche.min dl,.cartouche.min .echelle{display:none}
-.cartouche.min .t{border-bottom:0}
-.status{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;color:var(--muted);text-align:center;padding:24px}
-.status div{max-width:420px}
-.status b{display:block;color:var(--ink);font:600 20px var(--f-display);margin-bottom:6px}
-.visit-hint{position:absolute;left:12px;top:56px;padding:6px 12px;border-radius:6px;border:1px solid var(--line);font-size:13px;color:var(--ink);white-space:nowrap;max-width:calc(100% - 24px);overflow:hidden;text-overflow:ellipsis}
-.toast{position:absolute;left:12px;top:12px;background:var(--ink);color:var(--paper);padding:8px 12px;border-radius:6px;font-size:13.5px;opacity:0;transition:opacity .2s;pointer-events:none;max-width:min(420px,calc(100% - 24px));z-index:8}
+.lbl3d{position:absolute;left:0;top:0;background:color-mix(in srgb,var(--surface) 92%,transparent);color:var(--ink);border-radius:3px;padding:3px 8px 4px;white-space:nowrap;will-change:transform;text-align:center;font:600 12.5px/1.25 var(--f-body);box-shadow:0 1px 0 var(--line)}
+.lbl3d small{display:block;font:500 11.5px/1.2 var(--f-mono);color:var(--muted)}
+.cote{position:absolute;left:0;top:0;background:var(--measure);color:var(--measure-ink);font:600 12px/1.3 var(--f-mono);padding:2px 6px;border-radius:2px;white-space:nowrap;will-change:transform}
+.status{position:absolute;inset:0 0 90px;display:grid;place-items:center;pointer-events:none;color:var(--muted);text-align:center;padding:24px}
+.status div{max-width:400px}
+.status b{display:block;color:var(--ink);font:700 21px var(--f-display);font-stretch:112%;margin-bottom:6px}
+.visit-hint{position:absolute;left:12px;top:12px;background:color-mix(in srgb,var(--surface) 90%,transparent);border:1px solid var(--line);border-radius:4px;padding:6px 10px;font-size:13px;max-width:calc(100% - 24px)}
+.toast{position:absolute;left:50%;top:12px;transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:8px 14px;border-radius:4px;font-size:13.5px;opacity:0;transition:opacity .2s;pointer-events:none;width:max-content;max-width:min(440px,calc(100% - 24px));z-index:8}
 .toast.on{opacity:1}
+
+/* Ruban de mesure en pied de scène */
+.readout{position:absolute;left:12px;right:12px;bottom:12px;background:var(--surface);border:1px solid var(--line);border-radius:5px;overflow:hidden;box-shadow:0 12px 30px -18px color-mix(in srgb,var(--ink) 60%,transparent)}
+.ro-tape{height:9px;background:
+  repeating-linear-gradient(90deg,var(--measure) 0 1.5px,transparent 1.5px 50px) left top/100% 9px no-repeat,
+  repeating-linear-gradient(90deg,color-mix(in srgb,var(--measure) 55%,transparent) 0 1px,transparent 1px 10px) left top/100% 5px no-repeat;
+  border-bottom:1px solid var(--line)}
+.ro-row{display:flex;flex-wrap:wrap;align-items:stretch}
+.ro-head{flex:1 1 200px;min-width:0;padding:8px 14px;cursor:pointer;display:flex;flex-direction:column;justify-content:center}
+.ro-head b{font:700 15.5px/1.2 var(--f-display);font-stretch:110%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ro-head span{color:var(--muted);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ro-head i{font:500 11px var(--f-mono);font-style:normal;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.ro-vals{flex:3 1 420px;display:flex;flex-wrap:wrap;gap:4px 18px;margin:0;padding:8px 14px;border-left:1px solid var(--line);align-items:center}
+.ro-vals div{min-width:0}
+.ro-vals dt{font:500 10.5px/1.2 var(--f-mono);text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.ro-vals dd{margin:0;font:600 14px/1.3 var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.ro-scale{display:flex;align-items:center;gap:8px;padding:8px 14px;border-left:1px solid var(--line);font:600 13px var(--f-mono)}
+.ro-scale .bar{display:block;height:8px;border:1.5px solid var(--ink);border-top:0;width:90px}
+.readout.min .ro-vals,.readout.min .ro-scale{display:none}
+
+/* Panneau à onglets */
+.panel{grid-area:panel;background:var(--surface);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.tabs{display:flex;border-bottom:1px solid var(--line);padding:0 8px;flex:none}
+.tabs button{flex:1;background:none;border:0;border-bottom:2.5px solid transparent;padding:12px 4px 10px;font:600 13.5px var(--f-body);color:var(--muted);cursor:pointer;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--measure)}
+.badge{display:inline-grid;place-items:center;min-width:18px;height:18px;border-radius:9px;background:var(--measure);color:var(--measure-ink);font:600 11px var(--f-mono);margin-left:6px;padding:0 5px;vertical-align:1px}
+.tabpanel{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:14px;min-height:0}
+.ph{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.ph small{font:500 12px var(--f-mono);color:var(--muted);white-space:nowrap}
+.block{display:flex;flex-direction:column;gap:8px}
+.store{color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);padding-top:12px;margin:0}
+
+/* Zones de capture */
+.zones{display:flex;flex-direction:column;gap:12px}
+.zone{border:1px solid var(--line);border-radius:6px;background:var(--surface-2);display:flex;flex-direction:column;gap:9px;padding:10px 12px 12px}
+.zone header{display:flex;gap:8px;align-items:center}
+.zone .tag{font:600 12px var(--f-mono);background:var(--ink);color:var(--surface);border-radius:3px;padding:2px 6px;flex:none}
+.zone header input{flex:1;font-weight:700;background:none;border-color:transparent;padding:4px 6px}
+.zone header input:hover{border-color:var(--line)}
+.chip{font:500 12px var(--f-body);display:inline-flex;align-items:center;gap:6px;white-space:nowrap;color:var(--muted)}
+.chip::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.chip.todo{color:var(--warn)}
+.chip.ok{color:var(--ok)}
+.zone .x{background:none;border:0;color:var(--muted);font-size:20px;cursor:pointer;padding:0 4px;line-height:1}
+.zone .x:hover{color:var(--danger)}
+.thumbs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.thumbs:empty{display:none}
+.thumb{position:relative;flex:none;width:76px;height:76px;border-radius:4px;overflow:hidden;background:var(--line)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb button{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;border:0;background:color-mix(in srgb,var(--ink) 75%,transparent);color:var(--surface);cursor:pointer;font-size:13px;line-height:20px;padding:0}
+.zone input[type="text"],.zone textarea{font-size:13.5px;background:var(--surface)}
+.zone textarea{min-height:46px}
+
+/* Génération */
+.log{font:13px/1.5 var(--f-mono);background:var(--surface-2);border:1px solid var(--line);border-radius:4px;padding:8px 10px;display:flex;flex-direction:column;gap:3px}
+.log:empty{display:none}
+.log .err{color:var(--danger)}
+.log .ok{color:var(--ok)}
+details.manual{border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+details.manual summary{cursor:pointer;font-weight:700}
+details.manual[open] summary{margin-bottom:10px}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;counter-reset:s}
+.steps li{display:grid;grid-template-columns:26px 1fr;gap:4px 8px;counter-increment:s}
+.steps li::before{content:counter(s);grid-row:span 3;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--ink);display:grid;place-items:center;font:600 12px var(--f-mono)}
+.steps li > *{grid-column:2}
+.steps b{font-size:14px}
+.notes-ai{margin:0;padding-left:18px;font-size:13.5px;color:var(--muted)}
+.versions{display:flex;flex-direction:column;font-size:13.5px}
+.versions .v{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)}
+.versions .v span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.versions .v time{font:500 12px var(--f-mono);color:var(--muted);margin-right:6px}
+
 /* Feuilles modales */
-.sheet{position:fixed;inset:0;background:color-mix(in srgb,var(--ink) 45%,transparent);display:grid;place-items:center;z-index:20;padding:16px}
-.sheet > div{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;width:min(560px,100%);max-height:calc(100% - 32px);display:flex;flex-direction:column;gap:10px;min-height:0}
-.sheet h3{margin:0;font:600 19px var(--f-display)}
-.sheet textarea{flex:1;min-height:240px;font:12.5px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.sheet{position:fixed;inset:0;background:color-mix(in srgb,var(--ink) 50%,transparent);display:grid;place-items:center;z-index:20;padding:16px}
+.sheet > div{background:var(--surface);border-radius:8px;padding:18px;width:min(560px,100%);max-height:calc(100% - 32px);display:flex;flex-direction:column;gap:12px;min-height:0;box-shadow:0 24px 60px -20px rgba(0,0,0,.45)}
+.sheet h3{font:700 19px var(--f-display);font-stretch:110%;text-transform:none;letter-spacing:0;color:var(--ink)}
+.sheet textarea{flex:1;min-height:240px;font:12.5px/1.45 var(--f-mono)}
 .sheet .err{color:var(--danger);font-size:13px;margin:0}
 .sheet .err:empty{display:none}
 .radios{display:flex;gap:8px;flex-wrap:wrap}
-.radios label{flex:1;min-width:140px;border:1px solid var(--line);border-radius:8px;padding:9px 10px;cursor:pointer;display:flex;gap:8px;align-items:flex-start}
-.radios label:has(input:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 9%,transparent)}
-.radios input{accent-color:var(--accent);margin-top:3px}
+.radios label{flex:1;min-width:150px;border:1px solid var(--line);border-radius:6px;padding:10px 12px;cursor:pointer;display:flex;gap:9px;align-items:flex-start}
+.radios label:has(input:checked){border-color:var(--primary);box-shadow:inset 0 0 0 1px var(--primary)}
+.radios input{accent-color:var(--primary);margin-top:3px}
 .radios small{display:block;color:var(--muted);font-size:12.5px}
 [hidden]{display:none!important}
+
 @media (max-width:760px){
   html,body{height:auto}
-  .app{grid-template-columns:1fr;grid-template-areas:"stage" "side";height:auto}
-  main{height:58vh;min-height:340px}
-  aside{border-right:0;border-top:1px solid var(--line);overflow:visible}
-  .cartouche dl{grid-template-columns:repeat(2,1fr)}
-  .cartouche dl div:nth-child(4n){border-right:1px solid var(--line)}
-  .cartouche dl div:nth-child(2n){border-right:0}
+  .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 56vh auto;grid-template-areas:"bar" "stage" "panel";height:auto}
+  main{min-height:340px}
+  .panel{border-left:0;border-top:1px solid var(--line)}
+  .tabpanel{overflow:visible}
+  .views{margin-left:0;width:100%}
+  .views .seg{flex:1}
+  .views .seg button{flex:1}
+  .ro-vals{border-left:0;border-top:1px solid var(--line)}
+  .ro-scale{display:none}
 }
 @media (prefers-reduced-motion:reduce){.toast{transition:none}}
 </style>
 </head>
 <body>
 <div class="app">
-  <aside>
+  <header class="bar">
     <div class="brand">
-      <h1>Vision 3D</h1>
-      <p>Scannez une pièce, un logement ou un objet : l’IA en tire une maquette 3D exportable en GLB.</p>
+      <svg viewBox="0 0 32 32" aria-hidden="true"><g fill="none" stroke-linejoin="round" stroke-linecap="round"><path d="M16 3 27 9.5v13L16 29 5 22.5v-13Z M5 9.5 16 16l11-6.5M16 16v13" style="stroke:var(--ink)" stroke-width="2"/><path d="M1.5 9.5v13M.5 9.5h2M.5 22.5h2" style="stroke:var(--measure)" stroke-width="1.6"/></g></svg>
+      <span>Vision 3D</span>
     </div>
-
-    <div class="sec">
-      <h2>Projet</h2>
-      <div class="row">
-        <select id="projSel" class="grow" aria-label="Projet ouvert"></select>
-        <button class="act" id="bNew">Nouveau</button>
-      </div>
+    <div class="proj">
+      <select id="projSel" aria-label="Projet ouvert"></select>
+      <button class="act" id="bNew">Nouveau projet</button>
     </div>
-
-    <div class="sec" id="secZones">
-      <h2><span id="zonesTitle">Captures</span><small id="zonesCount"></small></h2>
-      <p class="hint" id="zonesHint"></p>
-      <div class="zones" id="zones"></div>
-      <button class="act wide" id="bAddZone">Ajouter une zone</button>
-    </div>
-
-    <div class="sec">
-      <h2>Générer la 3D</h2>
-      <label class="hint" for="req">Demande de modification (facultatif)</label>
-      <textarea id="req" maxlength="3000" placeholder="Ex. : le canapé fait 2,40 m, ajoute la porte-fenêtre côté jardin"></textarea>
-      <div id="aiDirect" hidden>
-        <div class="row">
-          <select id="tier" class="grow" aria-label="Qualité de l’analyse">
-            <option value="complex">Précision maximale (plus lent)</option>
-            <option value="default">Standard</option>
-          </select>
-        </div>
-        <div class="row" style="margin-top:8px">
-          <button class="act primary grow" id="bGen">Générer avec Claude</button>
-          <button class="act" id="bStop" hidden>Arrêter</button>
-        </div>
-        <p class="hint" id="aiNote" style="margin-top:6px"></p>
-      </div>
-      <p class="hint" id="aiAbsent" hidden>La génération en un clic fonctionne quand l’appli est ouverte comme artifact dans Claude. Ici, passez par le copier-coller ci-dessous.</p>
-      <div class="log" id="genLog" aria-live="polite"></div>
-      <details class="manual" id="manual">
-        <summary>Utiliser une autre IA (copier-coller)</summary>
-        <div class="step"><b>1. Copier le prompt</b>
-          <p class="hint">Il contient les instructions, le format attendu, le modèle actuel et vos captures à intégrer.</p>
-          <div class="row"><button class="act" id="bCopy">Copier le prompt</button><button class="act" id="bPromptDl">Télécharger (.txt)</button></div>
-          <textarea id="promptOut" readonly hidden aria-label="Prompt à copier"></textarea>
-        </div>
-        <div class="step"><b>2. Joindre les photos</b>
-          <p class="hint">Téléchargez les photos, décompressez le .zip et joignez les images au message : leurs noms correspondent au prompt.</p>
-          <div class="row"><button class="act" id="bZip">Télécharger les photos (.zip)</button></div>
-        </div>
-        <div class="step"><b>3. Coller la réponse de l’IA</b>
-          <textarea id="paste" placeholder="Collez ici le JSON renvoyé par l’IA"></textarea>
-          <div class="row"><button class="act primary" id="bApply">Appliquer la réponse</button></div>
-        </div>
-      </details>
-      <ul class="notes-ai" id="aiNotes" aria-label="Points incertains signalés par l’IA"></ul>
-    </div>
-
-    <div class="sec">
-      <h2>Versions<small id="verCount"></small></h2>
-      <div class="versions" id="versions"></div>
-    </div>
-
-    <div class="sec">
-      <h2>Fichiers</h2>
-      <div class="row">
-        <button class="act" id="bGlb">Exporter en GLB</button>
-        <button class="act" id="bJson">Modifier le JSON</button>
-      </div>
-      <div class="row">
-        <button class="act" id="bExport">Sauvegarder le projet</button>
-        <label class="act">Importer un projet<input type="file" id="fImport" accept=".json,application/json"></label>
-      </div>
-      <div class="row">
-        <button class="act" id="bRename">Renommer</button>
-        <button class="act danger" id="bDel">Supprimer le projet</button>
-      </div>
-    </div>
-    <div class="store" id="storeInfo">Ouverture…</div>
-  </aside>
-
-  <main id="stage">
-    <canvas id="c"></canvas>
-    <div id="labels" aria-hidden="true"></div>
-    <div id="cotes" aria-hidden="true"></div>
-    <div class="status" id="status"><div><b>Chargement…</b></div></div>
-    <div class="tools">
+    <div class="views">
       <div class="seg" role="group" aria-label="Vue">
         <button id="vMaq" aria-pressed="true">Maquette</button>
         <button id="vPlan" aria-pressed="false">Plan</button>
@@ -275,23 +235,119 @@ details.manual .step > b{font-size:13.5px}
       </details>
       <button class="act" id="bFit">Recadrer</button>
     </div>
-    <div class="visit-hint glass" id="visitHint" hidden>Glissez pour regarder, touchez le sol pour avancer (ou flèches du clavier)</div>
-    <div class="cartouche" id="cart" hidden>
-      <div class="t" id="cartHead" title="Afficher ou masquer le détail"><div><b id="cName"></b><span id="cDesc"></span></div><i id="cVer"></i></div>
-      <dl>
-        <div><dt>Largeur (X)</dt><dd id="dX">–</dd></div>
-        <div><dt>Hauteur (Y)</dt><dd id="dY">–</dd></div>
-        <div><dt>Profondeur (Z)</dt><dd id="dZ">–</dd></div>
-        <div><dt id="dAL">Surface</dt><dd id="dA">–</dd></div>
-        <div><dt id="dRL">Pièces</dt><dd id="dR">–</dd></div>
-        <div><dt id="dOL">Objets</dt><dd id="dO">–</dd></div>
-        <div><dt>Triangles</dt><dd id="dT">–</dd></div>
-        <div><dt>Photos</dt><dd id="dP">–</dd></div>
-      </dl>
-      <div class="echelle"><span>Échelle</span><span class="bar" id="sbBar"></span><b id="sbLbl"></b></div>
+  </header>
+
+  <main id="stage">
+    <canvas id="c"></canvas>
+    <div id="labels" aria-hidden="true"></div>
+    <div id="cotes" aria-hidden="true"></div>
+    <div class="status" id="status"><div><b>Chargement…</b></div></div>
+    <div class="visit-hint" id="visitHint" hidden>Glissez pour regarder, touchez le sol pour avancer (ou flèches du clavier)</div>
+    <div class="readout" id="cart" hidden>
+      <div class="ro-tape" aria-hidden="true"></div>
+      <div class="ro-row">
+        <div class="ro-head" id="cartHead" title="Afficher ou masquer les mesures"><i id="cVer"></i><b id="cName"></b><span id="cDesc"></span></div>
+        <dl class="ro-vals">
+          <div><dt>Largeur X</dt><dd id="dX">–</dd></div>
+          <div><dt>Hauteur Y</dt><dd id="dY">–</dd></div>
+          <div><dt>Prof. Z</dt><dd id="dZ">–</dd></div>
+          <div><dt id="dAL">Surface</dt><dd id="dA">–</dd></div>
+          <div><dt id="dRL">Pièces</dt><dd id="dR">–</dd></div>
+          <div><dt id="dOL">Objets</dt><dd id="dO">–</dd></div>
+          <div><dt>Triangles</dt><dd id="dT">–</dd></div>
+          <div><dt>Photos</dt><dd id="dP">–</dd></div>
+        </dl>
+        <div class="ro-scale" title="Échelle au centre de la vue"><span class="bar" id="sbBar"></span><b id="sbLbl"></b></div>
+      </div>
     </div>
     <div class="toast" id="toast" role="status"></div>
   </main>
+
+  <aside class="panel">
+    <div class="tabs" role="tablist" aria-label="Étapes du projet">
+      <button role="tab" id="tb-cap" aria-controls="tp-cap" aria-selected="true">Captures<span class="badge" id="capBadge" hidden></span></button>
+      <button role="tab" id="tb-gen" aria-controls="tp-gen" aria-selected="false" tabindex="-1">Générer</button>
+      <button role="tab" id="tb-hist" aria-controls="tp-hist" aria-selected="false" tabindex="-1">Historique</button>
+      <button role="tab" id="tb-files" aria-controls="tp-files" aria-selected="false" tabindex="-1">Fichiers</button>
+    </div>
+
+    <section class="tabpanel" role="tabpanel" id="tp-cap" aria-labelledby="tb-cap">
+      <div class="ph"><h2 id="zonesTitle">Pièces</h2><small id="zonesCount"></small></div>
+      <p class="hint" id="zonesHint"></p>
+      <div class="zones" id="zones"></div>
+      <button class="act dashed wide" id="bAddZone">Ajouter une zone</button>
+      <button class="act primary wide" id="bToGen" hidden>Passer à la génération</button>
+    </section>
+
+    <section class="tabpanel" role="tabpanel" id="tp-gen" aria-labelledby="tb-gen" hidden>
+      <h2>Générer la 3D</h2>
+      <div class="block">
+        <label class="hint" for="req">Demande de modification (facultatif)</label>
+        <textarea id="req" maxlength="3000" placeholder="Ex. : le canapé fait 2,40 m, ajoute la porte-fenêtre côté jardin"></textarea>
+      </div>
+      <div class="block" id="aiDirect" hidden>
+        <select id="tier" aria-label="Qualité de l’analyse">
+          <option value="complex">Précision maximale (plus lent)</option>
+          <option value="default">Standard</option>
+        </select>
+        <div class="row">
+          <button class="act primary grow" id="bGen">Générer avec Claude</button>
+          <button class="act" id="bStop" hidden>Arrêter</button>
+        </div>
+        <p class="hint" id="aiNote"></p>
+      </div>
+      <p class="hint" id="aiAbsent" hidden>La génération en un clic fonctionne quand l’appli est ouverte comme artifact dans Claude. Ici, passez par le copier-coller ci-dessous.</p>
+      <div class="log" id="genLog" aria-live="polite"></div>
+      <details class="manual" id="manual">
+        <summary>Utiliser une autre IA (copier-coller)</summary>
+        <ol class="steps">
+          <li><b>Copier le prompt</b>
+            <p class="hint">Instructions, format attendu, modèle actuel et captures à intégrer.</p>
+            <div class="row"><button class="act" id="bCopy">Copier le prompt</button><button class="act" id="bPromptDl">Télécharger (.txt)</button></div>
+            <textarea id="promptOut" readonly hidden aria-label="Prompt à copier"></textarea>
+          </li>
+          <li><b>Joindre les photos</b>
+            <p class="hint">Décompressez le .zip et joignez les images au message : leurs noms (Z1-01.jpg…) correspondent au prompt.</p>
+            <div class="row"><button class="act" id="bZip">Télécharger les photos (.zip)</button></div>
+          </li>
+          <li><b>Coller la réponse de l’IA</b>
+            <textarea id="paste" placeholder="Collez ici le JSON renvoyé par l’IA"></textarea>
+            <div class="row"><button class="act primary" id="bApply">Appliquer la réponse</button></div>
+          </li>
+        </ol>
+      </details>
+      <div class="block" id="notesBox" hidden>
+        <h3>Points à vérifier</h3>
+        <ul class="notes-ai" id="aiNotes"></ul>
+      </div>
+    </section>
+
+    <section class="tabpanel" role="tabpanel" id="tp-hist" aria-labelledby="tb-hist" hidden>
+      <div class="ph"><h2>Versions</h2><small id="verCount"></small></div>
+      <p class="hint">Chaque génération, collage ou modification du JSON crée une version. Restaurer en crée une nouvelle : rien n’est perdu.</p>
+      <div class="versions" id="versions"></div>
+    </section>
+
+    <section class="tabpanel" role="tabpanel" id="tp-files" aria-labelledby="tb-files" hidden>
+      <div class="block">
+        <h2>Exporter</h2>
+        <p class="hint">Le GLB contient les murs entiers, sans plafonds, avec des éléments nommés (pièces, murs, objets).</p>
+        <div class="row"><button class="act primary" id="bGlb">Exporter en GLB</button><button class="act" id="bJson">Modifier le JSON</button></div>
+      </div>
+      <div class="block">
+        <h2>Projet</h2>
+        <div class="row">
+          <button class="act" id="bExport">Sauvegarder le projet</button>
+          <label class="act">Importer un projet<input type="file" id="fImport" accept=".json,application/json"></label>
+        </div>
+        <div class="row">
+          <button class="act" id="bRename">Renommer</button>
+          <button class="act danger" id="bDel">Supprimer le projet</button>
+        </div>
+      </div>
+      <p class="store" id="storeInfo">Ouverture…</p>
+    </section>
+  </aside>
 </div>
 
 <div class="sheet" id="ask" hidden><div role="dialog" aria-modal="true" aria-labelledby="askMsg">
@@ -940,7 +996,7 @@ function buildCotes(){
   coteAnchors = [];
   if (!bbox) return;
   cotes = new THREE.Group(); scene.add(cotes);
-  const m = new THREE.LineBasicMaterial({color:cssColor("--accent"), depthTest:false, transparent:true});
+  const m = new THREE.LineBasicMaterial({color:cssColor("--measure"), depthTest:false, transparent:true});
   const s = bbox.getSize(new THREE.Vector3()), D = Math.max(s.x, s.y, s.z), o = D * 0.07, t = D * 0.025, mn = bbox.min, mx = bbox.max, y0 = mn.y;
   const seg = pts => { const g = new THREE.BufferGeometry().setFromPoints(pts.map(p => new THREE.Vector3(...p))); const l = new THREE.LineSegments(g, m); l.renderOrder = 10; cotes.add(l); };
   const zf = mx.z + o, xr = mx.x + o, xl = mn.x - o;
@@ -964,7 +1020,7 @@ function rebuild(refit){
   const full = buildScene(P.model, {cut:null, ceilings:false}); // emprise réelle (murs entiers)
   const b = new THREE.Box3().setFromObject(full.root); disposeTree(full.root);
   bbox = b.isEmpty() ? null : b;
-  if (P.kind === "logement") built.labels.forEach(l => { const el = document.createElement("div"); el.className = "lbl3d"; el.innerHTML = "<b>" + esc(l.title) + "</b>" + esc(l.sub); $("labels").appendChild(el); labelEls.push({el, pos:l.pos}); });
+  if (P.kind === "logement") built.labels.forEach(l => { const el = document.createElement("div"); el.className = "lbl3d"; el.innerHTML = esc(l.title) + "<small>" + esc(l.sub) + "</small>"; $("labels").appendChild(el); labelEls.push({el, pos:l.pos}); });
   buildGrid(); buildCotes(); renderCart();
   const empty = !P.model.rooms.length && !P.model.objects.length;
   $("status").hidden = !empty;
@@ -1096,6 +1152,7 @@ $("bTheme").onclick = () => {
   buildGrid(); buildCotes();
 };
 { const t = lsGet("v3d-theme"); if (t === "dark" || t === "light") document.documentElement.dataset.theme = t; }
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (!document.documentElement.dataset.theme) { buildGrid(); buildCotes(); } });
 document.addEventListener("click", e => { const m = $("menuView"); if (m.open && !m.contains(e.target)) m.open = false; });
 $("cartHead").onclick = () => $("cart").classList.toggle("min");
 if (matchMedia("(max-width:760px)").matches) $("cart").classList.add("min");
@@ -1169,7 +1226,16 @@ const zoneHasData = z => z.photos.length || z.measures || z.notes;
 const pendingZones = () => P ? P.zones.filter(z => zoneHasData(z) && zoneStatus(z).cls === "todo") : [];
 function touchZone(z){ z.changedAt = new Date().toISOString(); }
 
-function updateZonesCount(){ $("zonesCount").textContent = P && P.zones.length ? P.zones.length + (P.zones.length > 1 ? " zones" : " zone") + ", " + pendingZones().length + " à intégrer" : ""; }
+function updateZonesCount(){
+  const n = P ? P.zones.length : 0, k = pendingZones().length;
+  $("zonesCount").textContent = n ? n + (n > 1 ? " zones" : " zone") + " · " + k + " à intégrer" : "";
+  $("capBadge").hidden = !k; $("capBadge").textContent = k;
+  $("bToGen").hidden = !k; $("bToGen").textContent = "Passer à la génération (" + k + (k > 1 ? " zones" : " zone") + " à intégrer)";
+}
+const TABS = ["cap","gen","hist","files"];
+function showTab(t){ TABS.forEach(k => { const on = k === t, b = $("tb-" + k); b.setAttribute("aria-selected", String(on)); b.tabIndex = on ? 0 : -1; $("tp-" + k).hidden = !on; }); }
+TABS.forEach((k, i) => { const b = $("tb-" + k); b.onclick = () => showTab(k); b.onkeydown = e => { const d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0; if (!d) return; const n = TABS[(i + d + TABS.length) % TABS.length]; showTab(n); $("tb-" + n).focus(); }; });
+$("bToGen").onclick = () => showTab("gen");
 function renderZones(){
   const box = $("zones"); box.textContent = "";
   if (!P) return;
@@ -1179,7 +1245,7 @@ function renderZones(){
   P.zones.forEach((z, zi) => {
     const el = document.createElement("div"); el.className = "zone";
     const st = zoneStatus(z);
-    el.innerHTML = `<header><input type="text" maxlength="60" aria-label="Nom de la zone"><span class="chip ${st.cls}">${st.txt}</span><button class="x" title="Supprimer cette zone" aria-label="Supprimer cette zone">×</button></header>
+    el.innerHTML = `<header><span class="tag" title="Préfixe des photos dans le prompt">Z${zi + 1}</span><input type="text" maxlength="60" aria-label="Nom de la zone"><span class="chip ${st.cls}">${st.txt}</span><button class="x" title="Supprimer cette zone" aria-label="Supprimer cette zone">×</button></header>
       <div class="thumbs"></div>
       <div class="row">
         <label class="act small">Photos<input type="file" accept="image/*" multiple></label>
@@ -1253,11 +1319,11 @@ function renderVersions(){
   if (!P) return;
   $("verCount").textContent = (P.versions.length + 1) + " au total";
   const cur = document.createElement("div"); cur.className = "v";
-  cur.innerHTML = "<span><b>Actuelle</b> · " + esc(P.modelLabel || "") + (P.modelAt ? " · " + esc(when(P.modelAt)) : "") + "</span>";
+  cur.innerHTML = "<span>" + (P.modelAt ? "<time>" + esc(when(P.modelAt)) + "</time>" : "") + "<b>Actuelle</b> · " + esc(P.modelLabel || "") + "</span>";
   box.appendChild(cur);
   P.versions.slice().reverse().forEach(v => {
     const d = document.createElement("div"); d.className = "v";
-    const s = document.createElement("span"); s.textContent = when(v.at) + " · " + v.label;
+    const s = document.createElement("span"); s.innerHTML = "<time>" + esc(when(v.at)) + "</time>" + esc(v.label);
     const b = document.createElement("button"); b.className = "act small"; b.textContent = "Restaurer";
     b.onclick = async () => { commitModel(normalize(clone(v.model), P.kind).model, "Restauration du " + when(v.at)); await saveNow(); toast("Version restaurée. La précédente reste dans l’historique."); };
     d.append(s, b); box.appendChild(d);
@@ -1265,7 +1331,9 @@ function renderVersions(){
 }
 function renderNotes(){
   const ul = $("aiNotes"); ul.textContent = "";
-  (P && P.model.notes || []).forEach(n => { const li = document.createElement("li"); li.textContent = n; ul.appendChild(li); });
+  const notes = (P && P.model.notes) || [];
+  notes.forEach(n => { const li = document.createElement("li"); li.textContent = n; ul.appendChild(li); });
+  $("notesBox").hidden = !notes.length;
 }
 
 /* =====================================================================
@@ -1458,7 +1526,7 @@ $("newOk").onclick = async () => {
   P && await saveNow(); P = null;
   await store.save(p); projects.push({id:p.id, name:p.name, kind:p.kind, updatedAt:p.updatedAt});
   applyMode("maquette");
-  await openProject(p.id);
+  await openProject(p.id); showTab("cap");
 };
 $("newName").onkeydown = e => { if (e.key === "Enter") $("newOk").click(); };
 
