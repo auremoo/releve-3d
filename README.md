@@ -1,5 +1,8 @@
 # Relevé 3D
 
+> Créé par Aurélien Moote - Moo - 2026. Logiciel libre (licence MIT) :
+> réutilisable à condition de conserver la mention de l'auteur.
+
 Anciennement *Vision 3D*.
 
 Application web (un seul fichier, `index.html`) qui transforme des photos d'un logement ou d'un objet en maquette 3D exportable en GLB.
@@ -63,3 +66,9 @@ Le schéma complet envoyé à l'IA se trouve dans la constante `SCHEMA` de `inde
 - Le résultat est une maquette fidèle aux proportions, pas un relevé photoréaliste. Sa précision dépend des mesures fournies.
 - Les murs sont dessinés vers l'intérieur de chaque pièce, à partir de l'axe. Les murs extérieurs n'ont donc qu'une demi-épaisseur.
 - Le LiDAR des iPhone n'est pas accessible depuis une page web.
+
+## Auteur & licence
+
+**Aurélien Moote - Moo - 2026**  
+Copyright (c) 2026 Aurélien Moote ("Moo")  
+Distribué sous [licence MIT](./LICENSE) — réutilisable à condition de conserver la mention de l'auteur.
