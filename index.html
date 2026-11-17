@@ -51,6 +51,8 @@
   --stage-a:#14223B; --stage-b:#08101E; --grid1:#2F4366; --grid2:#1B2945; color-scheme: dark;
 }
 *,*::before,*::after{box-sizing:inherit}
+/* Le contenu d’un <details> n’hérite pas toujours du box-sizing (Chrome) : on le fixe sur les contrôles. */
+.act,select,input,textarea,.seg button,.tabs button,.menu .pop label,.menu .pop button{box-sizing:border-box}
 html,body{height:100%;margin:0}
 body{background:var(--bg);color:var(--ink);font:15px/1.45 var(--f-body);-webkit-font-smoothing:antialiased}
 button,input,select,textarea{font:inherit;color:inherit}
@@ -78,6 +80,8 @@ h3{font:600 12px/1.2 var(--f-mono);text-transform:uppercase;letter-spacing:.08em
 .act.small{padding:5px 9px;font-size:12.5px}
 .act.wide{width:100%}
 .act.dashed{border-style:dashed;background:none}
+.act .ic{display:none;width:20px;height:20px;flex:none}
+button,summary,.tabs button,label.act{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible,label.act:focus-within{outline:2px solid var(--measure);outline-offset:2px}
 select,input[type="text"],textarea{background:var(--surface-2);border:1px solid var(--line);border-radius:4px;padding:8px 10px;min-width:0}
 textarea{width:100%;resize:vertical;min-height:64px}
@@ -183,6 +187,13 @@ details.manual[open] summary{margin-bottom:10px}
 .steps li > *{grid-column:2}
 .steps b{font-size:14px}
 .notes-ai{margin:0;padding-left:18px;font-size:13.5px;color:var(--muted)}
+.ds{display:flex;flex-direction:column;gap:6px}
+.ds label{font-weight:600;font-size:13.5px;margin-top:4px}
+.ds label small{font-weight:400;color:var(--muted)}
+.ds input{background:var(--surface-2);border:1px solid var(--line);border-radius:4px;padding:8px 10px;min-width:0;width:100%}
+.ds .err{color:var(--danger);font-size:13px;margin:0}
+.ds .err:empty{display:none}
+.ds .row{margin-top:6px}
 .versions{display:flex;flex-direction:column;font-size:13.5px}
 .versions .v{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)}
 .versions .v span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -202,17 +213,84 @@ details.manual[open] summary{margin-bottom:10px}
 .radios small{display:block;color:var(--muted);font-size:12.5px}
 [hidden]{display:none!important}
 
+/* Téléphone : page qui défile, barre compacte sur deux lignes, scène à hauteur fixe, onglets collés en haut pendant le défilement du panneau. */
 @media (max-width:760px){
   html,body{height:auto}
-  .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 56vh auto;grid-template-areas:"bar" "stage" "panel";height:auto}
-  main{min-height:340px}
-  .panel{border-left:0;border-top:1px solid var(--line)}
-  .tabpanel{overflow:visible}
-  .views{margin-left:0;width:100%}
-  .views .seg{flex:1}
-  .views .seg button{flex:1}
-  .ro-vals{border-left:0;border-top:1px solid var(--line)}
+  body{font-size:15.5px}
+  .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto clamp(280px,52svh,520px) auto;grid-template-areas:"bar" "stage" "panel";height:auto;min-height:100svh}
+  /* 16 px minimum : en dessous, iOS zoome sur le champ à chaque saisie */
+  select,input[type="text"],input[type="url"],input[type="password"],textarea,.zone input[type="text"],.zone textarea,.sheet textarea{font-size:16px}
+  .act,.seg button,select,input[type="text"],input[type="url"],input[type="password"]{min-height:44px}
+  .act.small{min-height:36px}
+  .act{padding:10px 14px}
+  .act .ic{display:block}
+  .bar .act .lbl{display:none}
+  .bar .act{width:44px;padding:0;display:inline-grid;place-items:center}
+  .bar{gap:8px;padding-block:8px;padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));position:relative;z-index:6}
+  .brand svg{width:30px;height:30px}
+  .proj{flex:1 1 0;max-width:none}
+  .views{margin-left:0;width:100%;gap:8px}
+  .views .seg{flex:1;min-width:0}
+  .views .seg button{flex:1;min-width:0;padding:0 6px;font-size:14px}
+  .menu{position:static}
+  .menu .pop{left:12px;right:12px;top:calc(100% - 2px);min-width:0}
+  .menu .pop label,.menu .pop button{min-height:44px;font-size:15px}
+  main{min-height:0}
+  .status{inset:0 0 64px}
+  .status b{font-size:18px}
+  .visit-hint{left:8px;top:8px;font-size:12.5px;max-width:calc(100% - 16px)}
+  .readout{left:8px;right:8px;bottom:8px}
+  .ro-tape{height:6px;background-size:100% 6px,100% 3px}
+  .ro-head{flex-basis:100%;padding:6px 40px 7px 12px;position:relative}
+  .ro-head::after{content:"";position:absolute;right:16px;top:50%;width:8px;height:8px;border:solid var(--muted);border-width:0 2px 2px 0;transform:translateY(-30%) rotate(-135deg)}
+  .readout.min .ro-head::after{transform:translateY(-70%) rotate(45deg)}
+  .ro-head b{font-size:14.5px}
+  .ro-head i{font-size:10px}
+  .ro-head span{display:none}
+  .ro-vals{border-left:0;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px 10px;padding:8px 12px}
+  .ro-vals dd{font-size:13px;overflow:hidden;text-overflow:ellipsis}
+  .ro-vals dt{font-size:9.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ro-scale{display:none}
+  .panel{border-left:0;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .tabs{position:sticky;top:0;z-index:5;background:var(--surface);padding:0 4px;overflow-x:auto;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tabs button{min-height:48px;padding:12px 6px 10px;font-size:14px}
+  .tabpanel{overflow:visible;padding:16px max(16px,env(safe-area-inset-right,0px)) 28px max(16px,env(safe-area-inset-left,0px))}
+  .tabpanel .row > .act{flex:1 1 auto}
+  .zone{padding:10px 10px 12px}
+  .zone .x{min-width:44px;min-height:44px;font-size:24px}
+  .thumb{width:84px;height:84px}
+  .thumb button{width:28px;height:28px;line-height:28px;font-size:15px}
+  .steps li{grid-template-columns:24px 1fr}
+  /* Feuilles modales ancrées en bas, comme une feuille native */
+  .sheet{place-items:end stretch;padding:0}
+  .sheet > div{width:100%;border-radius:14px 14px 0 0;max-height:92svh;padding:18px 16px max(16px,env(safe-area-inset-bottom,0px));overflow:auto}
+  .sheet textarea{min-height:200px}
+  .sheet .row > .act{flex:1}
+  .radios label{min-width:0;flex-basis:100%}
+}
+@media (max-width:480px){ .brand{font-size:0;gap:0} }
+@media (max-width:360px){ .views .seg button{font-size:13px;padding:0 2px;letter-spacing:-.01em} .views{gap:6px} .bar{gap:6px} }
+/* Téléphone à l'horizontale : scène à gauche, panneau à droite, tout tient dans l'écran. */
+@media (max-height:500px) and (orientation:landscape){
+  html,body{height:100%}
+  .app{grid-template-columns:minmax(0,1fr) min(340px,42vw);grid-template-rows:auto minmax(0,1fr);grid-template-areas:"bar bar" "stage panel";height:100dvh;min-height:0}
+  .bar{flex-wrap:nowrap;padding-block:6px}
+  .brand{font-size:0;gap:0}
+  .act .ic{display:block}
+  .bar .act .lbl{display:none}
+  .bar .act,.bar select,.seg button{min-height:40px}
+  .bar .act{width:40px;padding:0;display:inline-grid;place-items:center}
+  .views{margin-left:0}
+  .views .seg{flex:1;min-width:0}
+  .views .seg button{flex:1;min-width:0;padding:0 6px}
+  .proj{flex:1 1 0}
+  .views{width:auto;flex:1 1 0}
+  .panel{border-top:0;border-left:1px solid var(--line);min-height:0}
+  .tabpanel{overflow:auto}
+  .tabs{position:static}
+  .readout .ro-vals{display:none}
+  .ro-head::after{display:none}
 }
 @media (prefers-reduced-motion:reduce){.toast{transition:none}}
 </style>
@@ -226,7 +304,7 @@ details.manual[open] summary{margin-bottom:10px}
     </div>
     <div class="proj">
       <select id="projSel" aria-label="Projet ouvert"></select>
-      <button class="act" id="bNew">Nouveau projet</button>
+      <button class="act" id="bNew" aria-label="Nouveau projet" title="Nouveau projet"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><span class="lbl">Nouveau projet</span></button>
     </div>
     <div class="views">
       <div class="seg" role="group" aria-label="Vue">
@@ -235,7 +313,7 @@ details.manual[open] summary{margin-bottom:10px}
         <button id="vVisit" aria-pressed="false">Visite</button>
       </div>
       <details class="menu" id="menuView">
-        <summary class="act">Affichage</summary>
+        <summary class="act" aria-label="Affichage" title="Affichage"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg><span class="lbl">Affichage</span></summary>
         <div class="pop">
           <label id="lCut"><input type="checkbox" id="tCut"> Murs coupés à 1,10 m</label>
           <label id="lCeil"><input type="checkbox" id="tCeil"> Plafonds</label>
@@ -247,7 +325,7 @@ details.manual[open] summary{margin-bottom:10px}
           <button id="bTheme">Changer de thème</button>
         </div>
       </details>
-      <button class="act" id="bFit">Recadrer</button>
+      <button class="act" id="bFit" aria-label="Recadrer" title="Recadrer"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/><circle cx="12" cy="12" r="2.5"/></svg><span class="lbl">Recadrer</span></button>
     </div>
   </header>
 
@@ -260,7 +338,7 @@ details.manual[open] summary{margin-bottom:10px}
     <div class="readout" id="cart" hidden>
       <div class="ro-tape" aria-hidden="true"></div>
       <div class="ro-row">
-        <div class="ro-head" id="cartHead" title="Afficher ou masquer les mesures"><i id="cVer"></i><b id="cName"></b><span id="cDesc"></span></div>
+        <div class="ro-head" id="cartHead" title="Afficher ou masquer les mesures" role="button" tabindex="0" aria-controls="cart"><i id="cVer"></i><b id="cName"></b><span id="cDesc"></span></div>
         <dl class="ro-vals">
           <div><dt>Largeur X</dt><dd id="dX">–</dd></div>
           <div><dt>Hauteur Y</dt><dd id="dY">–</dd></div>
@@ -351,13 +429,32 @@ details.manual[open] summary{margin-bottom:10px}
       <div class="block">
         <h2>Projet</h2>
         <div class="row">
-          <button class="act" id="bExport">Sauvegarder le projet</button>
-          <label class="act">Importer un projet<input type="file" id="fImport" accept=".json,application/json"></label>
+          <button class="act" id="bExport">Exporter ce projet</button>
+          <label class="act">Importer un fichier<input type="file" id="fImport" accept=".json,application/json"></label>
         </div>
         <div class="row">
           <button class="act" id="bRename">Renommer</button>
           <button class="act danger" id="bDel">Supprimer le projet</button>
         </div>
+      </div>
+      <div class="block" id="backupBox" hidden>
+        <h2>Sauvegarde complète</h2>
+        <p class="hint" id="backupHint"></p>
+        <div class="row"><button class="act primary" id="bBackup">Sauvegarder</button></div>
+        <details class="manual" id="dsBox">
+          <summary>DataSafe</summary>
+          <form class="ds" id="dsForm" autocomplete="off">
+            <p class="hint">Renseignez les trois champs pour envoyer la sauvegarde sur DataSafe. Laissez-les vides pour télécharger un fichier. Ils restent dans ce navigateur et sont inclus dans chaque sauvegarde.</p>
+            <label for="dsUrl">URL DataSafe</label>
+            <input type="url" id="dsUrl" inputmode="url" spellcheck="false" placeholder="https://…/api/data-safe/ingest">
+            <label for="dsKey">Clé API <small>(DataSafe › Paramètres dans PRP)</small></label>
+            <input type="password" id="dsKey" spellcheck="false" autocomplete="new-password">
+            <label for="dsApp">Nom de l’app <small>(nom du dossier)</small></label>
+            <input type="text" id="dsApp" spellcheck="false" autocapitalize="off" placeholder="releve-3d">
+            <p class="err" id="dsErr"></p>
+            <div class="row"><button class="act" type="submit">Enregistrer</button><button class="act" type="button" id="dsClear">Effacer</button></div>
+          </form>
+        </details>
       </div>
       <p class="store" id="storeInfo">Ouverture…</p>
     </section>
@@ -1168,8 +1265,10 @@ $("bTheme").onclick = () => {
 { const t = lsGet("v3d-theme"); if (t === "dark" || t === "light") document.documentElement.dataset.theme = t; }
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (!document.documentElement.dataset.theme) { buildGrid(); buildCotes(); } });
 document.addEventListener("click", e => { const m = $("menuView"); if (m.open && !m.contains(e.target)) m.open = false; });
-$("cartHead").onclick = () => $("cart").classList.toggle("min");
-if (matchMedia("(max-width:760px)").matches) $("cart").classList.add("min");
+function setCartMin(on){ $("cart").classList.toggle("min", on); $("cartHead").setAttribute("aria-expanded", String(!on)); }
+$("cartHead").onclick = () => setCartMin(!$("cart").classList.contains("min"));
+$("cartHead").onkeydown = e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); $("cartHead").click(); } };
+setCartMin(matchMedia("(max-width:760px), (max-height:500px)").matches);
 
 function renderCart(){
   if (!P){ $("cart").hidden = true; return; }
@@ -1498,10 +1597,125 @@ $("bExport").onclick = async () => {
     await saveFile(safeName(P.name) + ".releve3d.json", new Blob([JSON.stringify(data)], {type:"application/json"}));
   } catch(e){ console.error(e); toast("Sauvegarde impossible."); }
 };
+/* =====================================================================
+   Sauvegarde complète (stockage navigateur uniquement) : localStorage + IndexedDB,
+   envoyée à DataSafe si configuré, sinon téléchargée en JSON.
+   ===================================================================== */
+const DS_KEYS = {url:"v3d-datasafe-url", apiKey:"v3d-datasafe-key", appName:"v3d-datasafe-app"};
+const dsConfig = () => ({url:(lsGet(DS_KEYS.url) || "").trim(), apiKey:(lsGet(DS_KEYS.apiKey) || "").trim(), appName:(lsGet(DS_KEYS.appName) || "").trim()});
+const dsReady = c => !!(c.url && c.apiKey && c.appName);
+const lsRemove = k => { try { localStorage.removeItem(k); } catch(_) {} };
+const LS_PREFIX = "v3d-";
+
+function collectLocalStorage(){
+  const out = {};
+  try { for (let i = 0; i < localStorage.length; i++){ const k = localStorage.key(i); if (k && k.startsWith(LS_PREFIX)) out[k] = localStorage.getItem(k); } } catch(_) {}
+  return out;
+}
+const idbAll = (db, name, method) => new Promise((res, rej) => { const rq = db.transaction(name, "readonly").objectStore(name)[method](); rq.onsuccess = () => res(rq.result); rq.onerror = () => rej(rq.error); });
+// Chaque object store est lu en entier via getAll() ; les Blob (photos) passent en data URL pour tenir dans du JSON.
+async function collectIndexedDB(db){
+  const stores = {};
+  for (const name of Array.from(db.objectStoreNames)){
+    const st = db.transaction(name, "readonly").objectStore(name);
+    const [values, keys] = await Promise.all([idbAll(db, name, "getAll"), st.keyPath ? Promise.resolve(null) : idbAll(db, name, "getAllKeys")]);
+    stores[name] = await Promise.all(values.map(async (v, i) => {
+      const value = v instanceof Blob ? {_blob:true, type:v.type, data:await blobToData(v)} : v;
+      return keys ? {key:keys[i], value} : value;
+    }));
+  }
+  return {[db.name]: {version:db.version, stores}};
+}
+
+async function buildBackup(cfg){
+  if (P) await saveNow();
+  const storage = ["localStorage"], data = {localStorage:collectLocalStorage()};
+  if (store === LocalStore && LocalStore.idb){ storage.push("indexedDB"); data.indexedDB = await collectIndexedDB(LocalStore.idb); }
+  return {
+    _datasafe:{apiKey:cfg.apiKey, url:cfg.url, appName:cfg.appName},
+    _meta:{exportedAt:new Date().toISOString(), storage, app:"releve-3d", format:2},
+    ...data
+  };
+}
+
+async function downloadBackup(json){
+  const day = new Date().toISOString().slice(0, 10);
+  return saveFile("releve-3d-sauvegarde-" + day + ".json", new Blob([json], {type:"application/json"}));
+}
+
+async function exportData(){
+  const cfg = dsConfig();
+  const backup = await buildBackup(cfg);
+  const json = JSON.stringify(backup);
+  if (dsReady(cfg)){
+    try {
+      const r = await withTimeout(fetch(cfg.url, {method:"POST", headers:{"Authorization":"Bearer " + cfg.apiKey, "X-App-Name":cfg.appName, "Content-Type":"application/json"}, body:json}), 60000);
+      const res = await r.json().catch(() => null);
+      if (r.ok && res && res.success){ toast("Sauvegardé sur DataSafe" + (res.versions ? " (" + res.versions + " version" + (res.versions > 1 ? "s" : "") + ")" : "") + "."); return "datasafe"; }
+      console.warn("DataSafe a refusé la sauvegarde", r.status, res);
+    } catch(e){ console.warn("DataSafe injoignable", e); }
+    // Repli silencieux : la sauvegarde part en fichier local.
+    if (await downloadBackup(json)) toast("DataSafe indisponible : sauvegarde téléchargée en fichier.", 5000);
+    return "fallback";
+  }
+  if (await downloadBackup(json)) toast("Sauvegarde téléchargée.");
+  return "download";
+}
+
+async function restoreBackup(data){
+  const dbs = data.indexedDB || {}, src = dbs.vision3d || Object.values(dbs)[0];
+  const st = (src && src.stores) || {};
+  const nP = (st.projects || []).length;
+  if (!(await ask("Restaurer cette sauvegarde ?", nP + " projet(s) du " + when(data._meta.exportedAt) + ". Les projets portant le même identifiant seront remplacés, les autres conservés.", "Restaurer"))) return;
+  if (P) await saveNow();
+  for (const [k, v] of Object.entries(data.localStorage || {})) if (k.startsWith(LS_PREFIX) && typeof v === "string") lsSet(k, v);
+  for (const ph of st.photos || []){
+    try {
+      const v = ph.value && ph.value._blob ? dataToBlob(ph.value.data) : null; if (!v) continue;
+      if (store === LocalStore) await LocalStore.tx("photos", "readwrite", s => s.put(v, ph.key));
+      else if (store === MemoryStore) MemoryStore.ph.set(ph.key, v);
+    } catch(_) {}
+  }
+  for (const p of st.projects || []){ if (p && p.id) { try { await store.save(p); } catch(e){ console.error(e); } } }
+  projects = await store.list().catch(() => projects);
+  P = null; renderProjects(); fillDataSafe();
+  const last = lsGet("v3d-last");
+  if (projects.length) await openProject(projects.some(p => p.id === last) ? last : projects[0].id);
+  toast(nP + " projet(s) restauré(s).");
+}
+
+function fillDataSafe(){ const c = dsConfig(); $("dsUrl").value = c.url; $("dsKey").value = c.apiKey; $("dsApp").value = c.appName; renderBackupHint(); }
+function renderBackupHint(){
+  const c = dsConfig();
+  $("backupHint").textContent = dsReady(c)
+    ? "Tous les projets, photos et réglages sont envoyés sur DataSafe (dossier « " + c.appName + " »). En cas d’échec, un fichier est téléchargé."
+    : "Tous les projets, photos et réglages de ce navigateur dans un seul fichier JSON, réimportable avec « Importer un fichier ».";
+  $("bBackup").textContent = dsReady(c) ? "Sauvegarder sur DataSafe" : "Sauvegarder (fichier)";
+}
+$("dsForm").onsubmit = e => {
+  e.preventDefault();
+  const url = $("dsUrl").value.trim(), apiKey = $("dsKey").value.trim(), appName = $("dsApp").value.trim();
+  const filled = [url, apiKey, appName].filter(Boolean).length;
+  let err = "";
+  if (filled && filled < 3) err = "Renseignez les trois champs, ou aucun.";
+  else if (url){ try { const u = new URL(url); if (u.protocol !== "https:" && !/^(localhost|127\.0\.0\.1)$/.test(u.hostname)) err = "L’URL doit commencer par https://."; } catch(_) { err = "URL invalide."; } }
+  if (!err && appName && !/^[\w.\-]{1,80}$/.test(appName)) err = "Nom de l’app : lettres, chiffres, tirets, points ou soulignés.";
+  $("dsErr").textContent = err; if (err) return;
+  [[DS_KEYS.url, url], [DS_KEYS.apiKey, apiKey], [DS_KEYS.appName, appName]].forEach(([k, v]) => v ? lsSet(k, v) : lsRemove(k));
+  renderBackupHint(); toast(filled ? "DataSafe configuré." : "DataSafe désactivé : la sauvegarde se fera en fichier.");
+};
+$("dsClear").onclick = () => { Object.values(DS_KEYS).forEach(lsRemove); $("dsErr").textContent = ""; fillDataSafe(); toast("Configuration DataSafe effacée."); };
+$("bBackup").onclick = async () => {
+  const b = $("bBackup"); if (b.disabled) return; b.disabled = true; const label = b.textContent; b.textContent = "Sauvegarde…";
+  try { await exportData(); } catch(e){ console.error(e); toast("Sauvegarde impossible : " + (e.message || "erreur") + "."); }
+  finally { b.disabled = false; b.textContent = label; renderBackupHint(); }
+};
+
 $("fImport").onchange = async e => {
   const f = e.target.files[0]; e.target.value = ""; if (!f) return;
   try {
     const data = JSON.parse(await f.text());
+    if (data && data._meta && data._meta.app === "releve-3d" && (data.indexedDB || data.localStorage)){ await restoreBackup(data); return; }
     if (!["releve-3d", "vision-3d"].includes(data.app) || !data.project) throw new Error("Ce fichier n’est pas un projet Relevé 3D.");  // "vision-3d" : fichiers .vision3d.json d’avant le renommage
     const p = data.project; const map = {};
     for (const [old, url] of Object.entries(data.photos || {})) { try { map[old] = await store.putPhoto(dataToBlob(url)); } catch(_) {} }
@@ -1571,9 +1785,11 @@ async function createDemos(){
   await initStore();
   $("storeInfo").textContent = {
     cloud:"Projets enregistrés dans votre espace Claude, à votre seul nom. Les photos sont stockées avec cet artifact.",
-    local:"Projets et photos enregistrés dans ce navigateur. Utilisez « Sauvegarder le projet » pour les garder ailleurs.",
-    memory:"Stockage indisponible : rien n’est conservé après fermeture. Utilisez « Sauvegarder le projet »."
+    local:"Projets et photos enregistrés dans ce navigateur (IndexedDB). Utilisez « Sauvegarder » pour les garder ailleurs.",
+    memory:"Stockage indisponible : rien n’est conservé après fermeture. Utilisez « Sauvegarder »."
   }[store.kind];
+  // Sauvegarde complète et DataSafe : seulement quand les données sont dans le navigateur (pas dans l’espace Claude).
+  if (store.kind !== "cloud"){ $("backupBox").hidden = false; fillDataSafe(); }
   if (caps.sample){
     $("aiDirect").hidden = false;
     const imgs = caps.limits && caps.limits.images;

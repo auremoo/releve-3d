@@ -12,7 +12,7 @@ Application web (un seul fichier, `index.html`) qui transforme des photos d'un l
    - **Ailleurs** : « Copier le prompt » + « Télécharger les photos (.zip) », à coller dans n'importe quelle IA qui accepte des images, puis on colle sa réponse dans l'appli.
 3. **Mise à jour** : une zone ajoutée ou modifiée est marquée « À intégrer ». La génération suivante envoie seulement ces zones et le modèle existant. L'IA renvoie un correctif (`upsert` / `remove`) fusionné par identifiant. Une « demande de modification » en texte libre fonctionne aussi sans photo.
 4. **Vues** : maquette, plan (murs coupés à 1,10 m) et visite à hauteur d'yeux, où l'on touche le sol pour avancer. Cotes, surfaces des pièces, historique des versions, édition directe du JSON.
-5. **Export** : GLB (murs entiers, sans plafonds) et sauvegarde complète du projet en `.releve3d.json`, photos comprises. Les anciennes sauvegardes `.vision3d.json` s'importent toujours.
+5. **Export** : GLB (murs entiers, sans plafonds) export d'un projet en `.releve3d.json`, photos comprises, et sauvegarde complète de tous les projets (voir plus bas). Les anciennes sauvegardes `.vision3d.json` s'importent toujours.
 
 ## Stockage
 
@@ -20,7 +20,20 @@ Application web (un seul fichier, `index.html`) qui transforme des photos d'un l
 |---|---|
 | Artifact claude.ai | Base de données de l'artifact, dans l'espace privé de l'utilisateur (`data/users/<id>`). Les photos sont stockées comme assets de l'artifact. |
 | Page ouverte dans un navigateur | IndexedDB du navigateur (base `vision3d`, nom conservé pour ne pas perdre les projets déjà enregistrés) |
-| Stockage indisponible | Mémoire seulement : penser à « Sauvegarder le projet » |
+| Stockage indisponible | Mémoire seulement : penser à « Sauvegarder » |
+
+Les réglages (thème, dernier projet ouvert, configuration DataSafe) sont dans `localStorage`, sous des clés préfixées `v3d-`.
+
+## Sauvegarde complète et DataSafe
+
+Uniquement quand les données sont dans le navigateur (pas en mode artifact claude.ai). Onglet **Fichiers → Sauvegarde complète** :
+
+- `exportData()` rassemble les clés `v3d-*` du `localStorage` et le contenu entier de chaque object store IndexedDB (`getAll()`). Les photos (Blob) y sont encodées en data URL.
+- Le fichier JSON a cette forme : `{ _datasafe: {apiKey, url, appName}, _meta: {exportedAt, storage, app, format: 2}, localStorage: {...}, indexedDB: { vision3d: { version, stores: { projects: [...], photos: [{key, value}] } } } }`.
+- **DataSafe configuré** (URL, clé API, nom de l'app, dans le volet DataSafe) : la sauvegarde est envoyée en `POST <url>` avec les en-têtes `Authorization: Bearer <apiKey>`, `X-App-Name: <appName>` et `Content-Type: application/json`. Le bloc `_datasafe` est volontairement inclus, ce qui permet de réimporter puis de renvoyer la sauvegarde sans tout reconfigurer. En cas d'erreur réseau ou de réponse sans `success: true`, la sauvegarde est téléchargée en fichier.
+- **DataSafe non configuré** : téléchargement de `releve-3d-sauvegarde-AAAA-MM-JJ.json`.
+- « Importer un fichier » reconnaît ce format et restaure tout : projets, photos et réglages. Un projet de même identifiant est remplacé, les autres sont conservés.
+- Pour l'envoi depuis GitHub Pages, le serveur DataSafe doit accepter les requêtes CORS de `https://auremoo.github.io` (en-têtes `Authorization` et `X-App-Name`). Sinon, la sauvegarde part en fichier.
 
 ## Format du modèle
 
